@@ -35,3 +35,6 @@ def ext_hook(_code, data):
 
 packb = partial(msgpack.packb, use_bin_type=True, default=default)
 unpackb = partial(msgpack.unpackb, encoding='utf-8', ext_hook=ext_hook)
+
+Packer = partial(msgpack.Packer, use_bin_type=True, default=default)
+Unpacker = partial(msgpack.Unpacker, encoding='utf-8', ext_hook=ext_hook)
