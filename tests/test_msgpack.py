@@ -15,6 +15,10 @@ test_data = [
     (
         b'\xd7\x02A\xdf\xff\xff\xff\xc0\x00\x00',
         datetime(2038, 1, 19, 3, 14, 7, tzinfo=timezone.utc)
+    ),
+    (
+        b'\x81\xa7__exc__\x94\xa8builtins\xaaValueError\x92\xa3foo\xa3bar\xc0',
+        ValueError('foo', 'bar')
     )
 ]
 
@@ -26,7 +30,12 @@ def test_encode(msg, native):
 
 @pytest.mark.parametrize("msg,native", test_data)
 def test_decode(msg, native):
-    assert msgpack.unpackb(msg) == native
+    if isinstance(native, BaseException):
+        unpacked = msgpack.unpackb(msg)
+        assert isinstance(unpacked, type(native))
+        assert unpacked.args == native.args
+    else:
+        assert msgpack.unpackb(msg) == native
 
 
 def test_encode_fallback():

@@ -6,6 +6,8 @@ from functools import partial
 
 import msgpack
 
+from msgpack_ext import exceptions
+
 
 class code(enum.IntEnum):
     uuid = 1
@@ -18,6 +20,9 @@ def default(obj):
     if isinstance(obj, datetime):
         ts = struct.pack('!d', obj.timestamp())
         return msgpack.ExtType(code.datetime, ts)
+    if isinstance(obj, BaseException):
+        obj = exceptions.serialize_exception(obj)
+        return {'__exc__': obj}
 
     raise TypeError("Unknown type: %r" % (obj,))
 
@@ -33,8 +38,14 @@ def ext_hook(_code, data):
     return msgpack.ExtType(_code, data)
 
 
+def object_hook(obj):
+    if '__exc__' in obj:
+        obj = exceptions.deserialize_exception(*obj['__exc__'])
+    return obj
+
+
 packb = partial(msgpack.packb, use_bin_type=True, default=default)
-unpackb = partial(msgpack.unpackb, encoding='utf-8', ext_hook=ext_hook)
+unpackb = partial(msgpack.unpackb, encoding='utf-8', ext_hook=ext_hook, object_hook=object_hook)
 
 Packer = partial(msgpack.Packer, use_bin_type=True, default=default)
-Unpacker = partial(msgpack.Unpacker, encoding='utf-8', ext_hook=ext_hook)
+Unpacker = partial(msgpack.Unpacker, encoding='utf-8', ext_hook=ext_hook, object_hook=object_hook)
