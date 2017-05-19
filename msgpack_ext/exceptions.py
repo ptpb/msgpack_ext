@@ -20,7 +20,7 @@ def deserialize_exception(module_name, class_name, args, traceback_dict):
     try:
         module = importlib.import_module(module_name)
         cls = getattr(module, class_name)
-    except (ModuleNotFoundError, AttributeError):
+    except (ImportError, AttributeError):
         cls = type(class_name, (BaseException,), {})
         cls.__module__ = module_name
 
